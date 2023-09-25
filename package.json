@@ -1,0 +1,29 @@
+{
+  "name": "op-fractal-sc",
+  "version": "0.1.0",
+  "description": "Smart contracts for Optimism Fractal. https://app.charmverse.io/op-grants/page-8947154553563161",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sim31/op-fractal-sc.git"
+  },
+  "keywords": [
+    "smart-contracts",
+    "fractally",
+    "ethereum",
+    "optimism"
+  ],
+  "author": "Tadas Vaitiekunas",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/sim31/op-fractal-sc/issues"
+  },
+  "homepage": "https://github.com/sim31/op-fractal-sc#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "hardhat": "^2.17.3"
+  }
+}
