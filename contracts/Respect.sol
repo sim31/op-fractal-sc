@@ -24,11 +24,6 @@ contract Respect is IRespect, ERC165 {
     string public _name;
     string public _symbol;
 
-    address public issuer;
-    address public executor;
-    uint public lastRanksTime;
-    uint public ranksDelay;
-
     mapping(address => uint256) private _balances;
     mapping(TokenId => uint64) private _values;
     /// Tokens indexed here can have 0 value in _values. This means that this NTT was burned
@@ -41,6 +36,20 @@ contract Respect is IRespect, ERC165 {
     constructor(string memory name_, string memory symbol_) {
         _name = name_;
         _symbol = symbol_;
+    }
+
+    /**
+     * @dev See {IERC721Metadata-name}.
+     */
+    function name() public view virtual override returns (string memory) {
+        return _name;
+    }
+
+    /**
+     * @dev See {IERC721Metadata-symbol}.
+     */
+    function symbol() public view virtual override returns (string memory) {
+        return _symbol;
     }
 
     function valueOfToken(uint256 tokenId) public view override returns (uint64) {
@@ -56,18 +65,9 @@ contract Respect is IRespect, ERC165 {
         return owner;
     }
 
-    function _ownerOf(uint256 tokenId) internal pure returns (address) {
-        return ownerFromTokenId(TokenId.wrap(tokenId));
-    }
-
     function tokenExists(uint256 tokenId) public view returns(bool) {
         uint64 v = _valueOf(TokenId.wrap(tokenId));
         return v != 0;
-    }
-
-    function _valueOf(TokenId tokenId) public view returns (uint64) {
-        uint64 v = _values[tokenId];
-        return v;
     }
 
     function totalSupply() public view override returns (uint256) {
@@ -84,6 +84,54 @@ contract Respect is IRespect, ERC165 {
 
     function balanceOf(address account) public view virtual override returns (uint256) {
         return _balances[account];
+    }
+
+    function tokenOfOwnerByIndex(address owner, uint256 index) public view override returns (uint256) {
+        TokenId[] storage ownedTokens = _tokenByOwnerIndex[owner];
+        require(index < ownedTokens.length, "No token by this index");
+        return TokenId.unwrap(ownedTokens[index]);
+    }
+
+    function tokenByIndex(uint256 index) public view override returns (uint256) {
+        require(index < _tokenByIndex.length, "No token by this index");
+        return TokenId.unwrap(_tokenByIndex[index]);
+    }
+
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(uint256 tokenId) external view override returns (string memory) {
+        _requireExisting(tokenId);
+
+        string memory baseURI = _baseURI();
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : "";
+    }
+
+    function locked(uint256) external override pure returns (bool) {
+        return true;
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165, IERC165)
+        returns (bool)
+    {
+        // This contract also has some ERC20 and ERC721 functions but it does not support transfers
+        return interfaceId == type(IERC5192).interfaceId
+        || interfaceId == type(IRespect).interfaceId
+        || super.supportsInterface(interfaceId);
+    }
+
+
+    function _ownerOf(uint256 tokenId) internal pure returns (address) {
+        return ownerFromTokenId(TokenId.wrap(tokenId));
+    }
+
+    function _valueOf(TokenId tokenId) internal view returns (uint64) {
+        uint64 v = _values[tokenId];
+        return v;
     }
 
     function _mint(TokenId tokenId, uint64 value) internal virtual {
@@ -123,7 +171,7 @@ contract Respect is IRespect, ERC165 {
         _beforeBurn(tokenId, value);
 
         // Check that token wasn't burned in _beforeBurn hook
-        _requireMinted(TokenId.unwrap(tokenId));
+        _requireExisting(TokenId.unwrap(tokenId));
 
         delete _values[tokenId];
 
@@ -141,33 +189,8 @@ contract Respect is IRespect, ERC165 {
         _afterBurn(tokenId, value);
     }
 
-    function tokenOfOwnerByIndex(address owner, uint256 index) public view override returns (uint256) {
-        TokenId[] storage ownedTokens = _tokenByOwnerIndex[owner];
-        require(index < ownedTokens.length, "No token by this index");
-        return TokenId.unwrap(ownedTokens[index]);
-    }
-
-    function tokenByIndex(uint256 index) public view override returns (uint256) {
-        require(index < _tokenByIndex.length, "No token by this index");
-        return TokenId.unwrap(_tokenByIndex[index]);
-    }
-
-    function _requireMinted(uint256 tokenId) internal view virtual {
+    function _requireExisting(uint256 tokenId) internal view virtual {
         require(tokenExists(tokenId), "Token does not exist");
-    }
-
-    /**
-     * @dev See {IERC721Metadata-name}.
-     */
-    function name() public view virtual override returns (string memory) {
-        return _name;
-    }
-
-    /**
-     * @dev See {IERC721Metadata-symbol}.
-     */
-    function symbol() public view virtual override returns (string memory) {
-        return _symbol;
     }
 
     /**
@@ -179,20 +202,6 @@ contract Respect is IRespect, ERC165 {
         return "";
     }
 
-    /**
-     * @dev See {IERC721Metadata-tokenURI}.
-     */
-    function tokenURI(uint256 tokenId) external view override returns (string memory) {
-        _requireMinted(tokenId);
-
-        string memory baseURI = _baseURI();
-        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : "";
-    }
-
-
-    function locked(uint256) external override pure returns (bool) {
-        return true;
-    }
 
     function _beforeMint(TokenId tokenId, uint64 value) internal virtual {}
 
@@ -202,18 +211,6 @@ contract Respect is IRespect, ERC165 {
 
     function _afterBurn(TokenId tokenId, uint64 value) internal virtual {}
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165, IERC165)
-        returns (bool)
-    {
-        // This contract also has some ERC20 and ERC721 functions but it does not support transfers
-        return interfaceId == type(IERC5192).interfaceId
-        || interfaceId == type(IRespect).interfaceId
-        || super.supportsInterface(interfaceId);
-    }
 
     function safeTransferFrom(address, address, uint256, bytes calldata) public  pure override {
         revert OpNotSupported();

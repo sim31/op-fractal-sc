@@ -32,7 +32,7 @@ interface IRespect is IERC721Enumerable, IERC721Metadata, IERC5192 {
     function totalSupply() external view override returns (uint256);
 
     /**
-     * @dev Returns the amount of NTTs issued
+     * @dev Returns the amount of NTTs issued. Can include NTT already burned.
      */
     function tokenSupply() external view returns (uint256);
 

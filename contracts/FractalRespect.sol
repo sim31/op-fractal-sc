@@ -3,25 +3,33 @@ pragma solidity ^0.8.9;
 
 import "./Respect.sol";
 
-struct TokenIdUnpacked {
-    uint64 meetingNumber;
+struct TokenIdData {
+    uint64 periodNumber;
     address owner;
-    uint32 mintNumber;
+    uint8 mintType;
 }
+
+struct RespectEarner {
+    address addr;
+    uint256 respect;
+}
+
+enum MintTypes { RespectGame }
+
 /**
  * 256 bits (32 bytes):
  * First (leftmost) 20 bytes is address (owner of an NTT).
- * first (leftmost) 8 bytes is MeetingNumber (when NTT was issued)
- * next 20 bytes is address (owner of an NTT)
- * remaining 4 bytes is for MintNumber (first mint for the meeting for owner has 0 here);
+ * next (leftmost) 8 bytes is MeetingNumber (when NTT was issued)
+ * next 1 byte is for identifying type of mint
+ *  * mint issued from submitranks should have 0;
+ *  * other types of mints should have something else;
+ * remaining 3 bytes are reserved;
  */
-type TokenId is uint256;
-
-function packTokenId(TokenIdUnpacked calldata value) pure returns (TokenId) {
+function packTokenId(TokenIdData memory value) pure returns (TokenId) {
     return TokenId.wrap(
-        (uint256(value.meetingNumber) << 192)
+        (uint256(value.periodNumber) << 192)
         | (uint256(uint160(value.owner)) << 172)
-        | value.mintNumber
+        | value.mintType
     );
 }
 
@@ -29,12 +37,11 @@ function unpackOwner(TokenId packed) pure returns (address) {
     return address(0);
 }
 
-function unpackTokenId(TokenId packed) pure returns (TokenIdUnpacked memory) {
-    TokenIdUnpacked memory r;
+function unpackTokenId(TokenId packed) pure returns (TokenIdData memory) {
+    TokenIdData memory r;
     return r;
     // TODO:
 }
-
 
 contract FractalRespect is Respect {
     struct GroupRanks {
@@ -48,9 +55,29 @@ contract FractalRespect is Respect {
     address public issuer;
     address public executor;
     uint public lastRanksTime;
-    uint public ranksDelay;
+    uint64 public ranksDelay;
+    uint64 public periodNumber = 0;
 
-    function setRanksDelay(uint ranksDelay_) public virtual {
+    string private _baseURIVal;
+
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        address issuer_,
+        address executor_,
+        uint64 ranksDelay_
+    ) Respect(name_, symbol_) {
+        issuer = issuer_;
+        executor = executor_;
+        ranksDelay = ranksDelay_;
+    }
+
+    function setBaseURI(string calldata baseURI) public virtual {
+        require(msg.sender == executor || msg.sender == issuer, "Only executor or issuer can do this");
+        _baseURIVal = baseURI;
+    }
+
+    function setRanksDelay(uint64 ranksDelay_) public virtual {
         require(msg.sender == issuer, "Only issuer can do this");
         ranksDelay = ranksDelay_;
     }
@@ -61,18 +88,27 @@ contract FractalRespect is Respect {
     }
 
     function setExecutor(address newExecutor) public virtual {
-        require(msg.sender == issuer, "Only issuer can do this");
+        require(msg.sender == issuer || msg.sender == executor, "Only issuer or executor can do this");
         executor = newExecutor;
     }
 
-    function mint(address to, uint amount) public virtual {
+    function mint(address to, uint64 value, uint8 mintType, uint64 periodNumber_) public virtual {
         require(msg.sender == issuer, "Only issuer can do this");
-         _mint(to, amount);
+
+        TokenIdData memory tokenIdData = TokenIdData({
+            periodNumber: periodNumber_,
+            owner: to,
+            mintType: mintType
+        });
+        TokenId tokenId = packTokenId(tokenIdData);
+
+         _mint(tokenId, value);
     }
 
-    function burn(address from, uint amount) public virtual {
+    function burn(TokenId tokenId) public virtual {
         require(msg.sender == issuer, "Only issuer can do this");
-        _burn(from, amount);
+
+        _burn(tokenId);
     }
 
     function submitRanks(GroupRanks[] calldata allRanks) public virtual {
@@ -81,14 +117,26 @@ contract FractalRespect is Respect {
         uint timeSinceLast = block.timestamp - lastRanksTime;
         require(timeSinceLast >= ranksDelay, "ranksDelay amount of time has to pass before next submitRanks");
 
+        periodNumber += 1;
+
         for (uint i = 0; i < allRanks.length; i++) {
-            GroupRanks calldata res = allRanks[i];
+            GroupRanks calldata group = allRanks[i];
             for (uint r = 0; r < 6; r++) {
-                address rankedAddr = res.ranks[r];
+                address rankedAddr = group.ranks[r];
                 require(rankedAddr != address(0) || r < 4, "At least 3 non-zero addresses have to be ranked");
                 if (rankedAddr != address(0)) {
                     uint8 reward = uint8(_rewards[r]);
-                    _mint(rankedAddr, reward);
+
+                    TokenIdData memory tIdData = TokenIdData({
+                        periodNumber: periodNumber,
+                        owner: rankedAddr,
+                        mintType: uint8(MintTypes.RespectGame)
+                    });
+                    TokenId tId = packTokenId(tIdData);
+
+                    // Throws if token with this tId is already issued.
+                    // This protects from same account being ranked twice in the same period
+                    _mint(tId, reward);
                 }
             }
         }
@@ -96,5 +144,34 @@ contract FractalRespect is Respect {
         lastRanksTime = block.timestamp;
     }
 
+    function respectEarnedPerLastPeriods(address addr, uint64 periodCount) public view returns (uint256) {
+        uint256 remTokens = tokenSupplyOfOwner(addr);
+
+        uint256 respectSum = 0;
+
+        uint64 periodsEnd = periodNumber - periodCount;
+        while (remTokens > 0) { // We also break the loop inside
+            TokenId tokenId = TokenId.wrap(tokenOfOwnerByIndex(addr, remTokens - 1));
+            TokenIdData memory tIdData = unpackTokenId(tokenId);
+
+            if (tIdData.periodNumber <= periodsEnd) {
+                break;
+            }
+
+            // Should never happen (this would mean that tokens were issued for future period)
+            assert(tIdData.periodNumber > periodNumber);
+
+            uint64 value = _valueOf(tokenId);
+            respectSum += value;
+
+            remTokens -= 1;
+        }
+
+        return respectSum;
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return _baseURIVal;
+    }
 
 }
