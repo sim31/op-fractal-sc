@@ -7,13 +7,13 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * 256 bits (32 bytes):
- * First (rightmost) 20 bytes is address (owner of an NTT).
+ * First least-significant 20 bytes is address (owner of an NTT).
  */
 type TokenId is uint256;
 
 function ownerFromTokenId(TokenId packed) pure returns (address) {
-    // TODO:
-    return address(0);
+    uint160 i = uint160(TokenId.unwrap(packed));
+    return address(i);
 }
 
 contract Respect is IRespect, ERC165 {

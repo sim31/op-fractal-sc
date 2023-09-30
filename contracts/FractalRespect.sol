@@ -18,8 +18,8 @@ enum MintTypes { RespectGame }
 
 /**
  * 256 bits (32 bytes):
- * First (leftmost) 20 bytes is address (owner of an NTT).
- * next (leftmost) 8 bytes is MeetingNumber (when NTT was issued)
+ * First least-significant 20 bytes is address (owner of an NTT).
+ * next 8 bytes is MeetingNumber (when NTT was issued)
  * next 1 byte is for identifying type of mint
  *  * mint issued from submitranks should have 0;
  *  * other types of mints should have something else;
@@ -27,20 +27,19 @@ enum MintTypes { RespectGame }
  */
 function packTokenId(TokenIdData memory value) pure returns (TokenId) {
     return TokenId.wrap(
-        (uint256(value.periodNumber) << 192)
-        | (uint256(uint160(value.owner)) << 172)
-        | value.mintType
+        (uint256(value.mintType) << 232)
+        | (uint256(value.periodNumber) << 160)
+        | uint256(uint160(value.owner))
     );
-}
-
-function unpackOwner(TokenId packed) pure returns (address) {
-    return address(0);
 }
 
 function unpackTokenId(TokenId packed) pure returns (TokenIdData memory) {
     TokenIdData memory r;
+    r.owner = ownerFromTokenId(packed);
+    uint256 i = uint256(TokenId.unwrap(packed));
+    r.periodNumber = uint64(i >> 160);
+    r.mintType = uint8(i >> 232);
     return r;
-    // TODO:
 }
 
 contract FractalRespect is Respect {
@@ -49,7 +48,7 @@ contract FractalRespect is Respect {
         address[6] ranks;
     }
 
-    // Fibonacci starting from 5 in hex
+    // Fibonacci starting from 5 in hex (1 byte per number)
     bytes constant _rewards = hex"05080D152237";
 
     address public issuer;
