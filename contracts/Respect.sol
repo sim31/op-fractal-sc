@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 import "./IRespect.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * 256 bits (32 bytes):
@@ -16,7 +17,7 @@ function ownerFromTokenId(TokenId packed) pure returns (address) {
     return address(i);
 }
 
-contract Respect is IRespect, ERC165 {
+abstract contract Respect is IRespect, ERC165, Initializable {
     using Strings for uint256;
 
     error OpNotSupported();
@@ -33,7 +34,7 @@ contract Respect is IRespect, ERC165 {
 
     uint private _totalSupply;
 
-    constructor(string memory name_, string memory symbol_) {
+    function __Respect_init(string memory name_, string memory symbol_) public onlyInitializing {
         _name = name_;
         _symbol = symbol_;
     }

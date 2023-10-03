@@ -2,6 +2,9 @@
 pragma solidity ^0.8.9;
 
 import "./Respect.sol";
+import "./FractalInputsLogger.sol";
+import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 struct TokenIdData {
     uint64 periodNumber;
@@ -42,7 +45,8 @@ function unpackTokenId(TokenId packed) pure returns (TokenIdData memory) {
     return r;
 }
 
-contract FractalRespect is Respect {
+contract FractalRespect is Respect, FractalInputsLogger, UUPSUpgradeable, OwnableUpgradeable {
+
     struct GroupRanks {
         uint8 groupNum;
         address[6] ranks;
@@ -51,7 +55,6 @@ contract FractalRespect is Respect {
     // Fibonacci starting from 5 in hex (1 byte per number)
     bytes constant _rewards = hex"05080D152237";
 
-    address public issuer;
     address public executor;
     uint public lastRanksTime;
     uint64 public ranksDelay;
@@ -59,41 +62,36 @@ contract FractalRespect is Respect {
 
     string private _baseURIVal;
 
-    constructor(
+    function initialize(
         string memory name_,
         string memory symbol_,
         address issuer_,
         address executor_,
         uint64 ranksDelay_
-    ) Respect(name_, symbol_) {
-        issuer = issuer_;
+    ) initializer public {
+        __Respect_init(name_, symbol_);
+
         executor = executor_;
         ranksDelay = ranksDelay_;
+
+        _transferOwnership(issuer_);
     }
 
     function setBaseURI(string calldata baseURI) public virtual {
-        require(msg.sender == executor || msg.sender == issuer, "Only executor or issuer can do this");
+        require(_msgSender() == executor || _msgSender() == owner(), "Only executor or issuer can do this");
         _baseURIVal = baseURI;
     }
 
-    function setRanksDelay(uint64 ranksDelay_) public virtual {
-        require(msg.sender == issuer, "Only issuer can do this");
+    function setRanksDelay(uint64 ranksDelay_) public virtual onlyOwner {
         ranksDelay = ranksDelay_;
     }
 
-    function setIssuer(address newIssuer) public virtual {
-        require(msg.sender == issuer, "Only issuer can do this");
-        issuer = newIssuer;
-    }
-
     function setExecutor(address newExecutor) public virtual {
-        require(msg.sender == issuer || msg.sender == executor, "Only issuer or executor can do this");
+        require(_msgSender() == owner() || _msgSender() == executor, "Only issuer or executor can do this");
         executor = newExecutor;
     }
 
-    function mint(address to, uint64 value, uint8 mintType, uint64 periodNumber_) public virtual {
-        require(msg.sender == issuer, "Only issuer can do this");
-
+    function mint(address to, uint64 value, uint8 mintType, uint64 periodNumber_) public virtual onlyOwner {
         TokenIdData memory tokenIdData = TokenIdData({
             periodNumber: periodNumber_,
             owner: to,
@@ -104,14 +102,12 @@ contract FractalRespect is Respect {
          _mint(tokenId, value);
     }
 
-    function burn(TokenId tokenId) public virtual {
-        require(msg.sender == issuer, "Only issuer can do this");
-
+    function burn(TokenId tokenId) public virtual onlyOwner {
         _burn(tokenId);
     }
 
     function submitRanks(GroupRanks[] calldata allRanks) public virtual {
-        require(msg.sender == executor || msg.sender == issuer, "Only executor or issuer can do this");
+        require(_msgSender() == executor || _msgSender() == owner(), "Only executor or issuer can do this");
 
         uint timeSinceLast = block.timestamp - lastRanksTime;
         require(timeSinceLast >= ranksDelay, "ranksDelay amount of time has to pass before next submitRanks");
@@ -167,6 +163,9 @@ contract FractalRespect is Respect {
         }
 
         return respectSum;
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner {
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
