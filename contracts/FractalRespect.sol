@@ -5,7 +5,6 @@ import "./PeriodicRespect.sol";
 import "./FractalInputsLogger.sol";
 
 contract FractalRespect is PeriodicRespect, FractalInputsLogger {
-
     struct GroupRanks {
         uint8 groupNum;
         address[6] ranks;
@@ -49,19 +48,15 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
         ranksDelay = ranksDelay_;
     }
 
-    function setExecutor(address newExecutor) public virtual {
-        require(_msgSender() == owner() || _msgSender() == executor, "Only issuer or executor can do this");
+    function setExecutor(address newExecutor) public virtual byIssuerOrExecutor {
         executor = newExecutor;
     }
 
-    function setRewards(uint8[6] calldata newRewards) public virtual {
-        require(_msgSender() == owner() || _msgSender() == executor, "Only issuer or executor can do this");
+    function setRewards(uint8[6] calldata newRewards) public virtual byIssuerOrExecutor{
         rewards = newRewards;
     }
 
-    function submitRanks(GroupRanks[] calldata allRanks) public virtual {
-        require(_msgSender() == executor || _msgSender() == owner(), "Only executor or issuer can do this");
-
+    function submitRanks(GroupRanks[] calldata allRanks) public virtual byIssuerOrExecutor {
         uint timeSinceLast = block.timestamp - lastRanksTime;
         require(timeSinceLast >= ranksDelay, "ranksDelay amount of time has to pass before next submitRanks");
 
@@ -92,8 +87,16 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
         lastRanksTime = block.timestamp;
     }
 
-    function _baseURI() internal view virtual override returns (string memory) {
-        return _baseURIVal;
+    function setBaseURI(string calldata baseURI) public virtual override byIssuerOrExecutor {
+        _baseURIVal = baseURI;
     }
 
+    modifier byIssuerOrExecutor() {
+        require(_senderIssuerOrExecutor(), "Only executor or issuer can do this");
+        _;
+    }
+
+    function _senderIssuerOrExecutor() internal view returns (bool) {
+        return _msgSender() == executor || _msgSender() == owner();
+    }
 }
