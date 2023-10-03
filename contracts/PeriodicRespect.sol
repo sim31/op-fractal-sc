@@ -50,8 +50,8 @@ contract PeriodicRespect is Respect, UUPSUpgradeable, OwnableUpgradeable {
     uint64 public periodNumber;
 
     function initialize(
-        string memory name_,
-        string memory symbol_,
+        string calldata name_,
+        string calldata symbol_,
         address issuer_
     ) public virtual initializer {
         __PeriodicRespect_init(name_, symbol_, issuer_);
