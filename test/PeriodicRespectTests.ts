@@ -2,10 +2,14 @@ import {
   time,
   loadFixture,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { expect } from "chai";
+import chai, { expect } from "chai";
+import chaiSubset from "chai-subset";
 import { ethers, upgrades } from "hardhat";
 import { PeriodicRespect, PeriodicRespect__factory } from "../typechain-types";
 import { BigNumberish } from "ethers";
+import { type TokenIdDataStruct, packTokenId, unpackTokenId, tokenIdDataEq, normTokenIdData } from "../utils/tokenId";
+
+chai.use(chaiSubset);
 
 export async function checkConsistency(
   contract: PeriodicRespect,
@@ -68,55 +72,89 @@ export async function checkConsistencyOfBalance(
   );
 }
 
+async function deployImpl() {
+  // Contracts are deployed using the first signer/account by default
+  const signers = await ethers.getSigners();
+
+  const implOwner = signers[0]!;
+
+  const factory = await ethers.getContractFactory("PeriodicRespect", implOwner);
+
+  const implAddr = await upgrades.deployImplementation(
+    factory, { kind: 'uups' }
+  );
+
+  const addr = implAddr.toString();
+  // FIXME: why do I have to do a typecast here?
+  const impl = factory.attach(addr) as PeriodicRespect;
+
+  await expect(impl.initialize('ImplFractal', 'IF', implOwner.address)).to.not.be.reverted;
+
+  expect(await impl.name()).to.equal('ImplFractal');
+
+  await expect(impl.mint(signers[1]!, 5, 2, 0)).to.not.be.reverted;
+
+  await checkConsistencyOfSupply(impl, 1, 5);
+  await checkConsistencyOfBalance(impl, signers[1]!.address!, 1, 5);
+  await checkConsistencyOfBalance(impl, signers[0]!.address!, 0, 0);
+
+  return { implOwner, impl, factory, signers };
+}
+
+async function deploy() {
+  const { signers } = await deployImpl();
+
+  const proxyOwner = signers[1]!;
+
+  const factory = await ethers.getContractFactory("PeriodicRespect", proxyOwner);
+
+  // FIXME: why do I have to do a typecast here?
+  const proxy = (await upgrades.deployProxy(
+    factory, ["TestFractal", "TF", proxyOwner.address], { kind: 'uups' }
+  ) as unknown) as PeriodicRespect;
+
+  return { proxy, proxyOwner, factory, signers };
+}
 
 describe("PeriodicRespect", function () {
-  async function deployImpl() {
-    // Contracts are deployed using the first signer/account by default
-    const signers = await ethers.getSigners();
-
-    const implOwner = signers[0]!;
-
-    const factory = await ethers.getContractFactory("PeriodicRespect", implOwner);
-
-    const implAddr = await upgrades.deployImplementation(
-      factory, { kind: 'uups' }
-    );
-
-    const addr = implAddr.toString();
-    // FIXME: why do I have to do a typecast here?
-    const impl = factory.attach(addr) as PeriodicRespect;
-
-    await expect(impl.initialize('ImplFractal', 'IF', implOwner.address)).to.not.be.reverted;
-
-    expect(await impl.name()).to.equal('ImplFractal');
-
-    await expect(impl.mint(signers[1]!, 5, 2, 0)).to.not.be.reverted;
-
-    await checkConsistencyOfSupply(impl, 1, 5);
-    await checkConsistencyOfBalance(impl, signers[1]!.address!, 1, 5);
-    await checkConsistencyOfBalance(impl, signers[0]!.address!, 0, 0);
-
-    return { implOwner, impl, factory, signers };
-  }
-
-  async function deploy() {
-    const { signers } = await deployImpl();
-
-    const proxyOwner = signers[1]!;
-
-    const factory = await ethers.getContractFactory("PeriodicRespect", proxyOwner);
-
-    // FIXME: why do I have to do a typecast here?
-    const proxy = (await upgrades.deployProxy(
-      factory, ["TestFractal", "TF", proxyOwner.address], { kind: 'uups' }
-    ) as unknown) as PeriodicRespect;
-
-    return { proxy, proxyOwner, factory, signers };
-  }
-
   describe("Deployment", function () {
     it("Should not fail", async function () {
       await loadFixture(deploy);
+    });
+  });
+
+  describe("packTokenId", function() {
+    it("Should return TokenIdDataStruct packed to uint256", async function() {
+      const { proxy, signers } = await loadFixture(deploy);
+
+      const tokenData: TokenIdDataStruct = {
+        owner: signers[0]!.address,
+        periodNumber: 1,
+        mintType: 2
+      };
+      const expPacked = packTokenId(tokenData);
+
+      expect(ethers.toBeHex(await proxy.packTokenId(tokenData), 32)).to.be.equal(expPacked);
+    });
+
+    it("Should return TokenIdDataStruct unpacked from uint256", async function() {
+      const { proxy, signers } = await loadFixture(deploy);
+
+      const tokenData: TokenIdDataStruct = {
+        owner: signers[1]!.address,
+        periodNumber: 2,
+        mintType: 1
+      };
+      const expPacked = packTokenId(tokenData);
+
+      expect(ethers.toBeHex(await proxy.packTokenId(tokenData), 32)).to.be.equal(expPacked);
+
+      const expUnpacked = normTokenIdData(unpackTokenId(expPacked));
+      
+      const unpacked = normTokenIdData(await proxy.unpackTokenId(expPacked));
+
+      expect(unpacked).to.containSubset(normTokenIdData(tokenData));
+      expect(unpacked).to.containSubset(expUnpacked);
     });
   });
 

@@ -6,48 +6,43 @@ import "./FractalInputsLogger.sol";
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-struct TokenIdData {
-    uint64 periodNumber;
-    address owner;
-    uint8 mintType;
-}
-
-struct RespectEarner {
-    address addr;
-    uint256 respect;
-}
-
-enum MintTypes { RespectGame }
-
-/**
- * 256 bits (32 bytes):
- * First least-significant 20 bytes is address (owner of an NTT).
- * next 8 bytes is MeetingNumber (when NTT was issued)
- * next 1 byte is for identifying type of mint
- *  * mint issued from submitranks should have 0;
- *  * other types of mints should have something else;
- * remaining 3 bytes are reserved;
- */
-function packTokenId(TokenIdData memory value) pure returns (TokenId) {
-    return TokenId.wrap(
-        (uint256(value.mintType) << 232)
-        | (uint256(value.periodNumber) << 160)
-        | uint256(uint160(value.owner))
-    );
-}
-
-function unpackTokenId(TokenId packed) pure returns (TokenIdData memory) {
-    TokenIdData memory r;
-    r.owner = ownerFromTokenId(packed);
-    uint256 i = uint256(TokenId.unwrap(packed));
-    r.periodNumber = uint64(i >> 160);
-    r.mintType = uint8(i >> 232);
-    return r;
-}
-
 contract PeriodicRespect is Respect, UUPSUpgradeable, OwnableUpgradeable {
     string private _baseURIVal;
     uint64 public periodNumber;
+
+    struct TokenIdData {
+        uint64 periodNumber;
+        address owner;
+        uint8 mintType;
+    }
+
+    enum MintTypes { RespectGame }
+
+    /**
+     * 256 bits (32 bytes):
+     * First least-significant 20 bytes is address (owner of an NTT).
+     * next 8 bytes is MeetingNumber (when NTT was issued)
+     * next 1 byte is for identifying type of mint
+     *  * mint issued from submitranks should have 0;
+     *  * other types of mints should have something else;
+     * remaining 3 bytes are reserved;
+     */
+    function packTokenId(TokenIdData memory value) public pure returns (TokenId) {
+        return TokenId.wrap(
+            (uint256(value.mintType) << 224)
+            | (uint256(value.periodNumber) << 160)
+            | uint256(uint160(value.owner))
+        );
+    }
+
+    function unpackTokenId(TokenId packed) public pure returns (TokenIdData memory) {
+        TokenIdData memory r;
+        r.owner = ownerFromTokenId(packed);
+        uint256 i = uint256(TokenId.unwrap(packed));
+        r.periodNumber = uint64(i >> 160);
+        r.mintType = uint8(i >> 224);
+        return r;
+    }
 
     function initialize(
         string calldata name_,
