@@ -22,8 +22,8 @@ abstract contract Respect is IRespect, ERC165, Initializable {
 
     error OpNotSupported();
 
-    string public _name;
-    string public _symbol;
+    string private _name;
+    string private _symbol;
 
     mapping(address => uint256) private _balances;
     mapping(TokenId => uint64) private _values;
