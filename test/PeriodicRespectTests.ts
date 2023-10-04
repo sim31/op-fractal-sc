@@ -159,6 +159,57 @@ describe("PeriodicRespect", function () {
   });
 
   describe("mint", function () {
+    it("Should mint with expected token id and value", async function() {
+      const { proxy, signers } = await loadFixture(deploy);            
+
+      await expect(proxy.mint(signers[1]!, 2, 0, 0)).to.not.be.reverted;
+      const tokenId = packTokenId({
+        owner: signers[1]!.address,
+        mintType: 0, periodNumber: 0
+      });
+      expect(await proxy.valueOfToken(tokenId)).to.be.equal(2);
+
+      await expect(proxy.mint(signers[2]!, 5, 1, 5)).to.not.be.reverted;
+      const tokenId2 = packTokenId({
+        owner: signers[2]!.address,
+        mintType: 1, periodNumber: 5
+      });
+      expect(await proxy.valueOfToken(tokenId2)).to.be.equal(5);
+
+      checkConsistencyOfSupply(proxy, 2, 7);
+      checkConsistencyOfBalance(proxy, signers[1]!.address, 1, 2)
+      checkConsistencyOfBalance(proxy, signers[2]!.address, 1, 5)
+    });
+
+    it("Should mint to specified owner", async function() {
+      const { proxy, signers } = await loadFixture(deploy);            
+
+      await expect(proxy.mint(signers[1]!, 2, 0, 0)).to.not.be.reverted;
+      const tokenId = packTokenId({
+        owner: signers[1]!.address,
+        mintType: 0, periodNumber: 0
+      });
+      expect(await proxy.ownerOf(tokenId)).to.be.equal(signers[1]!.address);
+
+      await expect(proxy.mint(signers[2]!, 5, 1, 4)).to.not.be.reverted;
+      const tokenId2 = packTokenId({
+        owner: signers[2]!.address,
+        mintType: 1, periodNumber: 4
+      });
+      expect(await proxy.ownerOf(tokenId2)).to.be.equal(signers[2]!.address);
+
+      checkConsistencyOfSupply(proxy, 2, 7);
+      checkConsistencyOfBalance(proxy, signers[1]!.address, 1, 2)
+      checkConsistencyOfBalance(proxy, signers[2]!.address, 1, 5)
+    });
+
+    it("Should now allow minting two tokens with the same owner, periodNumber, and mintType", async function() {
+      const { proxy, signers } = await loadFixture(deploy);            
+
+      await expect(proxy.mint(signers[1]!, 2, 0, 0)).to.not.be.reverted;
+      await expect(proxy.mint(signers[1]!, 2, 0, 0)).to.be.reverted;
+    });
+
     it("Should produce consistent supplies and balances", async function() {
       const { proxy, signers } = await loadFixture(deploy);            
 
@@ -197,11 +248,61 @@ describe("PeriodicRespect", function () {
       await checkConsistencyOfBalance(proxy, signers[6]!.address, 1, 6);
       await checkConsistencyOfBalance(proxy, signers[7]!.address, 1, 10);
     });
-
-    // TODO: test for not allowing the same tokenId...
   });
 
   describe("burn", function () {
+    it("should not allow burning same token twice", async function() {
+      const { proxy, signers } = await loadFixture(deploy);            
+
+      await expect(proxy.mint(signers[1]!, 2, 0, 0)).to.not.be.reverted;
+      const tokenId = packTokenId({
+        owner: signers[1]!.address,
+        mintType: 0, periodNumber: 0
+      });
+
+      await expect(proxy.burn(tokenId)).to.not.be.reverted;
+      await expect(proxy.burn(tokenId)).to.be.reverted;
+
+      checkConsistencyOfSupply(proxy, 1, 0);
+      checkConsistencyOfBalance(proxy, signers[1]!.address, 1, 0);
+    });
+
+    it("should not allow burning a token that was not minted", async function() {
+      const { proxy, signers } = await loadFixture(deploy);            
+
+      await expect(proxy.mint(signers[1]!, 2, 0, 0)).to.not.be.reverted;
+
+      // Note different owner
+      const tokenId = packTokenId({
+        owner: signers[2]!.address,
+        mintType: 0, periodNumber: 0
+      });
+      await expect(proxy.burn(tokenId)).to.be.revertedWith('Token does not exist');
+
+      // Different mintType
+      const tokenId2 = packTokenId({
+        owner: signers[1]!.address,
+        mintType: 1, periodNumber: 0
+      });
+      await expect(proxy.burn(tokenId2)).to.be.revertedWith('Token does not exist');
+
+      // Different periodNumber
+      const tokenId3 = packTokenId({
+        owner: signers[1]!.address,
+        mintType: 0, periodNumber: 1
+      });
+      await expect(proxy.burn(tokenId3)).to.be.revertedWith('Token does not exist');
+
+      const tokenId4 = packTokenId({
+        owner: signers[1]!.address,
+        mintType: 0, periodNumber: 0
+      });
+      await expect(proxy.burn(tokenId4)).to.not.be.reverted;
+
+      checkConsistencyOfSupply(proxy, 1, 0);
+      checkConsistencyOfBalance(proxy, signers[1]!.address, 1, 0);
+    });
+
     it("Should preserve consistent supplies and balances", async function() {
       const { proxy, signers } = await loadFixture(deploy);            
 
@@ -257,6 +358,67 @@ describe("PeriodicRespect", function () {
       await checkConsistencyOfBalance(proxy, signers[3]!.address, 2, 21);
       await checkConsistencyOfBalance(proxy, signers[4]!.address, 2, 55);
     });
+  });
 
+  describe("earningsPerLastPeriods", function() {
+    it("should return respect earned per specified number of periods", async function() {
+      const { proxy, signers } = await loadFixture(deploy);
+
+      const acc1 = signers[4]!.address;
+
+      await expect(proxy.mint(acc1, 10, 0, 0)).to.not.be.reverted;
+      await expect(proxy.mint(acc1, 10, 0, 1)).to.not.be.reverted;
+      await expect(proxy.mint(acc1, 10, 0, 2)).to.not.be.reverted;
+      await expect(proxy.mint(acc1, 20, 1, 2)).to.not.be.reverted;
+
+      expect(await proxy.earningsPerLastPeriods(acc1, 3)).to.be.equal(50);
+      expect(await proxy.earningsPerLastPeriods(acc1, 2)).to.be.equal(40);
+      expect(await proxy.earningsPerLastPeriods(acc1, 1)).to.be.equal(30);
+    });
+  });
+
+  describe("setBaseURI", function() {
+    it("should set base URI for token URIs", async function() {
+      const { proxy, signers } = await loadFixture(deploy);
+
+      const baseURI = "https://someWeb.io/";
+      await expect(proxy.setBaseURI(baseURI)).to.not.be.reverted;
+
+      const acc1 = signers[4]!.address;
+      const acc2 = signers[5]!.address;
+
+      await expect(proxy.mint(acc1, 10, 0, 0)).to.not.be.reverted;
+      const tokenId1 = packTokenId({
+        owner: acc1, mintType: 0, periodNumber: 0
+      });
+      await expect(proxy.mint(acc2, 20, 1, 2)).to.not.be.reverted;
+      const tokenId2 = packTokenId({
+        owner: acc2, mintType: 1, periodNumber: 2
+      });
+
+      expect(await proxy.tokenURI(tokenId1)).to.be.equal(`${baseURI}${ethers.toBigInt(tokenId1).toString()}`);
+      expect(await proxy.tokenURI(tokenId2)).to.be.equal(`${baseURI}${ethers.toBigInt(tokenId2).toString()}`);
+    });
+  });
+
+  describe("tokenURI", function() {
+    it("should not return URI for un-minted token", async function() {
+      const { proxy, signers } = await loadFixture(deploy);
+      
+      const baseURI = "https://someWeb.io/";
+      await expect(proxy.setBaseURI(baseURI)).to.not.be.reverted;
+
+      const acc1 = signers[4]!.address;
+
+      await expect(proxy.mint(acc1, 10, 0, 0)).to.not.be.reverted;
+
+      // Different period number
+      const tokenId1 = packTokenId({
+        owner: acc1, mintType: 0, periodNumber: 1
+      });
+
+      await expect(proxy.tokenURI(tokenId1)).to.be.rejected;
+      
+    });
   });
 });

@@ -165,8 +165,9 @@ abstract contract Respect is IRespect, ERC165, Initializable {
     }
 
     function _burn(TokenId tokenId) internal virtual {
-        address owner = ownerOf(TokenId.unwrap(tokenId)); // Throws if token does not exist
+        address owner = ownerOf(TokenId.unwrap(tokenId));
         uint64 value = _valueOf(tokenId);
+        require(value != 0, "Token does not exist");
 
         _beforeBurn(tokenId, value);
 

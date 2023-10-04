@@ -5,10 +5,10 @@ import "./Respect.sol";
 import "./FractalInputsLogger.sol";
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "hardhat/console.sol";
 
 contract PeriodicRespect is Respect, UUPSUpgradeable, OwnableUpgradeable {
     string private _baseURIVal;
-    uint64 public periodNumber;
 
     struct TokenIdData {
         uint64 periodNumber;
@@ -81,22 +81,30 @@ contract PeriodicRespect is Respect, UUPSUpgradeable, OwnableUpgradeable {
         _burn(tokenId);
     }
 
-    function respectEarnedPerLastPeriods(address addr, uint64 periodCount) public view returns (uint256) {
+    function earningsPerLastPeriods(address addr, uint64 periodCount) public view returns (uint256) {
         uint256 remTokens = tokenSupplyOfOwner(addr);
+        // console.log("remTokens: ", remTokens);
 
         uint256 respectSum = 0;
 
-        uint64 periodsEnd = periodNumber - periodCount;
+        uint64 periodsPassed = 0;
+        uint64 lastPeriod = type(uint64).max;
         while (remTokens > 0) { // We also break the loop inside
             TokenId tokenId = TokenId.wrap(tokenOfOwnerByIndex(addr, remTokens - 1));
             TokenIdData memory tIdData = unpackTokenId(tokenId);
 
-            if (tIdData.periodNumber <= periodsEnd) {
-                break;
+            // console.log("tokenId: ", TokenId.unwrap(tokenId));
+
+            if (tIdData.periodNumber != lastPeriod) {
+                periodsPassed += 1;
+                if (periodsPassed > periodCount) {
+                    break;
+                }
+                lastPeriod = tIdData.periodNumber;
             }
 
             // Should never happen (this would mean that tokens were issued for future period)
-            assert(tIdData.periodNumber > periodNumber);
+            // assert(tIdData.periodNumber > periodNumber);
 
             uint64 value = _valueOf(tokenId);
             respectSum += value;

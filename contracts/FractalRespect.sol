@@ -15,6 +15,7 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
     address public executor;
     uint public lastRanksTime;
     uint64 public ranksDelay;
+    uint64 public periodNumber;
 
     string private _baseURIVal;
 
