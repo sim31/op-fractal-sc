@@ -55,7 +55,6 @@ abstract contract Respect is IRespect, ERC165, Initializable {
 
     function valueOfToken(uint256 tokenId) public view override returns (uint64) {
         uint64 v = _valueOf(TokenId.wrap(tokenId));
-        require(v != 0, "Token does not exist");        
         return v;
     }
 
