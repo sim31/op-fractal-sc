@@ -10,8 +10,8 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
         address[6] ranks;
     }
 
-    // Fibonacci starting from 5 in hex (1 byte per number)
-    uint8[6] public rewards;
+    // Fibonacci starting from 5 in hex
+    bytes constant _rewards = hex"05080D152237";
     address public executor;
     uint public lastRanksTime;
     uint64 public ranksDelay;
@@ -31,7 +31,6 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
     function initialize(
         string calldata name_,
         string calldata symbol_,
-        uint8[6] calldata rewards_,
         address issuer_,
         address executor_,
         uint64 ranksDelay_
@@ -40,7 +39,6 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
 
         executor = executor_;
         ranksDelay = ranksDelay_;
-        rewards = rewards_;
 
         _transferOwnership(issuer_);
     }
@@ -51,10 +49,6 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
 
     function setExecutor(address newExecutor) public virtual byIssuerOrExecutor {
         executor = newExecutor;
-    }
-
-    function setRewards(uint8[6] calldata newRewards) public virtual byIssuerOrExecutor{
-        rewards = newRewards;
     }
 
     function submitRanks(GroupRanks[] calldata allRanks) public virtual byIssuerOrExecutor {
@@ -69,7 +63,7 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
                 address rankedAddr = group.ranks[r];
                 require(rankedAddr != address(0) || r < 4, "At least 3 non-zero addresses have to be ranked");
                 if (rankedAddr != address(0)) {
-                    uint8 reward = rewards[r];
+                    uint8 reward = uint8(_rewards[r]);
 
                     TokenIdData memory tIdData = TokenIdData({
                         periodNumber: periodNumber,
