@@ -61,7 +61,7 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
             GroupRanks calldata group = allRanks[i];
             for (uint r = 0; r < 6; r++) {
                 address rankedAddr = group.ranks[r];
-                require(rankedAddr != address(0) || r < 4, "At least 3 non-zero addresses have to be ranked");
+                require(rankedAddr != address(0) || r < 3, "At least 3 non-zero addresses have to be ranked");
                 if (rankedAddr != address(0)) {
                     uint8 reward = uint8(_rewards[r]);
 
