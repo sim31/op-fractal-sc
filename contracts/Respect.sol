@@ -213,7 +213,7 @@ abstract contract Respect is IRespect, ERC165, Initializable {
     function _afterBurn(TokenId tokenId, uint64 value) internal virtual {}
 
 
-    function safeTransferFrom(address, address, uint256, bytes calldata) public  pure override {
+    function safeTransferFrom(address, address, uint256, bytes calldata) public pure override {
         revert OpNotSupported();
     }
     function safeTransferFrom(address, address, uint256) public pure override {

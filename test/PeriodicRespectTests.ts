@@ -421,4 +421,21 @@ describe("PeriodicRespect", function () {
       
     });
   });
+
+  describe("disabled transfers", function() {
+    it("should revert", async function() {
+      const { proxy, signers } = await loadFixture(deploy);
+
+      const acc1 = signers[4]!.address;
+      await expect(proxy.mint(acc1, 10, 0, 0)).to.not.be.reverted;
+
+      const tokenId = await proxy.tokenByIndex(0);
+
+      await expect(proxy.transferFrom(acc1, signers[0]!.address, tokenId)).to.be.revertedWithCustomError(proxy, 'OpNotSupported');
+      await expect(proxy["safeTransferFrom(address,address,uint256)"](acc1, signers[0]!.address, tokenId)).to.be.revertedWithCustomError(proxy, 'OpNotSupported');
+      await expect(proxy["safeTransferFrom(address,address,uint256,bytes)"](acc1, signers[0]!.address, tokenId, "0x00")).to.be.revertedWithCustomError(proxy, 'OpNotSupported');
+
+
+    });
+  })
 });
