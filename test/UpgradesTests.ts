@@ -16,8 +16,6 @@ export async function deploy() {
   return await loadFixture(deployPeriodicRespect);
 }
 
-// TODO: check if the implementation used the same deployed by me
-
 describe("Upgrades", function() {
   it("should allow deploying PeriodicRespect contract and then upgrade it to FractalRespect", async function() {
     const { proxy, signers, proxyOwner } = await loadFixture(deploy);
