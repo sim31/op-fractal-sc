@@ -12,7 +12,7 @@ import { checkConsistencyOfBalance, checkConsistencyOfSupply } from "./consisten
 
 chai.use(chaiSubset);
 
-async function deployImpl() {
+export async function deployImpl() {
   // Contracts are deployed using the first signer/account by default
   const signers = await ethers.getSigners();
 
@@ -41,7 +41,7 @@ async function deployImpl() {
   return { implOwner, impl, factory, signers };
 }
 
-async function deploy() {
+export async function deploy() {
   const { signers } = await deployImpl();
 
   const proxyOwner = signers[1]!;

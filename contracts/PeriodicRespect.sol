@@ -66,9 +66,13 @@ contract PeriodicRespect is Respect, UUPSUpgradeable, OwnableUpgradeable {
         _baseURIVal = baseURI;
     }
 
-    function mint(address to, uint64 value, uint8 mintType, uint64 periodNumber_) public virtual onlyOwner {
+    function mint(address to, uint64 value, uint8 mintType, uint64 periodNumber) public virtual onlyOwner {
+        _mint(to, value, mintType, periodNumber);
+    }
+
+    function _mint(address to, uint64 value, uint8 mintType, uint64 periodNumber) internal virtual {
         TokenIdData memory tokenIdData = TokenIdData({
-            periodNumber: periodNumber_,
+            periodNumber: periodNumber,
             owner: to,
             mintType: mintType
         });

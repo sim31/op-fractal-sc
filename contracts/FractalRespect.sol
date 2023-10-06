@@ -35,12 +35,10 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
         address executor_,
         uint64 ranksDelay_
     ) public virtual initializer {
-        __Respect_init(name_, symbol_);
+        __PeriodicRespect_init(name_, symbol_, issuer_);
 
         executor = executor_;
         ranksDelay = ranksDelay_;
-
-        _transferOwnership(issuer_);
     }
 
     function setRanksDelay(uint64 ranksDelay_) public virtual onlyOwner {
@@ -64,17 +62,9 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
                 require(rankedAddr != address(0) || r < 3, "At least 3 non-zero addresses have to be ranked");
                 if (rankedAddr != address(0)) {
                     uint8 reward = uint8(_rewards[r]);
-
-                    TokenIdData memory tIdData = TokenIdData({
-                        periodNumber: periodNumber,
-                        owner: rankedAddr,
-                        mintType: uint8(MintTypes.RespectGame)
-                    });
-                    TokenId tId = packTokenId(tIdData);
-
                     // Throws if token with this tId is already issued.
                     // This protects from same account being ranked twice in the same period
-                    _mint(tId, reward);
+                    _mint(rankedAddr, reward, uint8(MintTypes.RespectGame), periodNumber);
                 }
             }
         }

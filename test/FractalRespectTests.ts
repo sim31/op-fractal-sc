@@ -11,7 +11,7 @@ import { checkConsistencyOfBalance, checkConsistencyOfSupply } from "./consisten
 
 export type GroupRanksStruct = FractalRespect.GroupRanksStruct;
 
-async function deployImpl() {
+export async function deployImpl() {
   // Contracts are deployed using the first signer/account by default
   const signers = await ethers.getSigners();
 
@@ -43,7 +43,7 @@ async function deployImpl() {
   return { implOwner, impl, factory, signers };
 }
 
-async function deploy() {
+export async function deploy() {
   const { signers } = await deployImpl();
 
   const proxyOwner = signers[1]!;
@@ -137,17 +137,17 @@ async function deploy() {
 describe("FractalRespect", function () {
   describe("Deployment", function () {
     it("Should not fail and set specified parameters", async function () {
-      const { proxyOwner, proxyExecutor, ranksDelay, proxyFromExec} = await loadFixture(deploy);
+      const { proxyOwner, proxyExecutor, proxyFromOther, ranksDelay, proxyFromExec} = await loadFixture(deploy);
 
-      expect(await proxyFromExec.ranksDelay()).to.equal(ranksDelay);
-      expect(await proxyFromExec.executor()).to.equal(proxyExecutor.address);
-      expect(await proxyFromExec.owner()).to.equal(proxyOwner.address);
-      expect(await proxyFromExec.name()).to.equal("TestFractal");
-      expect(await proxyFromExec.symbol()).to.equal("TF");
-      expect(await proxyFromExec.lastRanksTime()).to.equal(0);
-      expect(await proxyFromExec.periodNumber()).to.equal(0);
-      expect(await proxyFromExec.totalSupply()).to.equal(0);
-      expect(await proxyFromExec.tokenSupply()).to.equal(0);
+      expect(await proxyFromOther.ranksDelay()).to.equal(ranksDelay);
+      expect(await proxyFromOther.executor()).to.equal(proxyExecutor.address);
+      expect(await proxyFromOther.owner()).to.equal(proxyOwner.address);
+      expect(await proxyFromOther.name()).to.equal("TestFractal");
+      expect(await proxyFromOther.symbol()).to.equal("TF");
+      expect(await proxyFromOther.lastRanksTime()).to.equal(0);
+      expect(await proxyFromOther.periodNumber()).to.equal(0);
+      expect(await proxyFromOther.totalSupply()).to.equal(0);
+      expect(await proxyFromOther.tokenSupply()).to.equal(0);
     });
   });
 
@@ -426,6 +426,58 @@ describe("FractalRespect", function () {
         76
       );
       await checkConsistencyOfSupply(proxyFromExec, 16, 479);
+    });
+
+    it("should set expected id for the minted respect", async function() {
+      const { submitRanksEx1, submitRanksEx2, proxyFromExec, proxyFromOther } = await loadFixture(deploy);
+
+      // First period
+      await expect(proxyFromExec.submitRanks(submitRanksEx1)).to.not.be.reverted;
+      expect(await proxyFromExec.periodNumber()).to.equal(1);
+
+      const id6 = packTokenId({
+        mintType: 0, periodNumber: 1, owner: submitRanksEx1[0]!.ranks[5]!
+      });
+      expect(await proxyFromOther.valueOfToken(id6)).to.equal(55);
+      expect(await proxyFromOther.ownerOf(id6)).to.equal(submitRanksEx1[0]!.ranks[5]!);
+
+      console.log("ok");
+
+      const id5 = packTokenId({
+        mintType: 0, periodNumber: 1, owner: submitRanksEx1[0]!.ranks[4]!
+      });
+      expect(await proxyFromOther.valueOfToken(id5)).to.equal(34);
+      expect(await proxyFromOther.ownerOf(id5)).to.equal(submitRanksEx1[0]!.ranks[4]!);
+
+      const id4 = packTokenId({
+        mintType: 0, periodNumber: 1, owner: submitRanksEx1[0]!.ranks[3]!
+      });
+      expect(await proxyFromOther.valueOfToken(id4)).to.equal(21);
+      expect(await proxyFromOther.ownerOf(id4)).to.equal(submitRanksEx1[0]!.ranks[3]!);
+
+      time.increase(604800); // 7 days
+
+      // Second period
+      await expect(proxyFromExec.submitRanks(submitRanksEx2)).to.not.be.reverted;
+      expect(await proxyFromExec.periodNumber()).to.equal(2);
+
+      const id26 = packTokenId({
+        mintType: 0, periodNumber: 2, owner: submitRanksEx2[0]!.ranks[5]!
+      });
+      expect(await proxyFromOther.valueOfToken(id26)).to.equal(55);
+      expect(await proxyFromOther.ownerOf(id26)).to.equal(submitRanksEx2[0]!.ranks[5]!);
+
+      const id25 = packTokenId({
+        mintType: 0, periodNumber: 2, owner: submitRanksEx2[0]!.ranks[4]!
+      });
+      expect(await proxyFromOther.valueOfToken(id25)).to.equal(34);
+      expect(await proxyFromOther.ownerOf(id25)).to.equal(submitRanksEx2[0]!.ranks[4]!);
+
+      const id24 = packTokenId({
+        mintType: 0, periodNumber: 2, owner: submitRanksEx2[0]!.ranks[3]!
+      });
+      expect(await proxyFromOther.valueOfToken(id24)).to.equal(21);
+      expect(await proxyFromOther.ownerOf(id24)).to.equal(submitRanksEx2[0]!.ranks[3]!);
     });
   });
 
