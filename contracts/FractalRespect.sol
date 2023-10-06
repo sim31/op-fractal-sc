@@ -19,24 +19,34 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
 
     string private _baseURIVal;
 
-    // Disable top initializer of PeriodicRespect
-    function initialize(
-        string calldata,
-        string calldata,
-        address
-    ) public virtual override {
-        revert OpNotSupported();
-    }
-
-    function initialize(
-        string calldata name_,
-        string calldata symbol_,
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor(
+        string memory name_,
+        string memory symbol_,
         address issuer_,
         address executor_,
         uint64 ranksDelay_
-    ) public virtual initializer {
+    ) PeriodicRespect(name_, symbol_, issuer_) {
+        initializeV2(executor_, ranksDelay_);
+    }
+
+    function initializeV2Whole(
+        string memory name_,
+        string memory symbol_,
+        address issuer_,
+        address executor_,
+        uint64 ranksDelay_
+    ) public virtual reinitializer(2) {
         __PeriodicRespect_init(name_, symbol_, issuer_);
 
+        executor = executor_;
+        ranksDelay = ranksDelay_;
+    }
+
+    function initializeV2(
+        address executor_,
+        uint64 ranksDelay_
+    ) public virtual reinitializer(2) {
         executor = executor_;
         ranksDelay = ranksDelay_;
     }

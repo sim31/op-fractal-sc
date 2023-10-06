@@ -21,16 +21,16 @@ export async function deployImpl() {
   const factory = await ethers.getContractFactory("FractalRespect", implOwner);
 
   const implAddr = await upgrades.deployImplementation(
-    factory, { kind: 'uups' }
+    factory,
+    {
+      kind: 'uups',
+      constructorArgs: ['ImplFractal', 'IF', implOwner.address, implExecutor.address, 518400]
+    }
   );
 
   const addr = implAddr.toString();
   // FIXME: why do I have to do a typecast here?
   const impl = factory.attach(addr) as FractalRespect;
-
-  await expect(impl["initialize(string,string,address,address,uint64)"](
-    'ImplFractal', 'IF', implOwner.address, implExecutor.address, 518400 // 6 days 
-  )).to.not.be.reverted;
 
   expect(await impl.name()).to.equal('ImplFractal');
 
@@ -40,11 +40,11 @@ export async function deployImpl() {
   await checkConsistencyOfBalance(impl, signers[1]!.address!, 1, 5);
   await checkConsistencyOfBalance(impl, signers[0]!.address!, 0, 0);
 
-  return { implOwner, impl, factory, signers };
+  return { implOwner, impl, factory, signers, implExecutor };
 }
 
 export async function deploy() {
-  const { signers } = await deployImpl();
+  const { signers, implOwner, implExecutor } = await deployImpl();
 
   const proxyOwner = signers[1]!;
   const proxyExecutor = signers[2]!;
@@ -62,7 +62,8 @@ export async function deploy() {
     ["TestFractal", "TF", proxyOwner.address, proxyExecutor.address, ranksDelay],
     {
       kind: 'uups',
-      initializer: "initialize(string,string,address,address,uint64)"
+      initializer: "initializeV2Whole(string,string,address,address,uint64)",
+      constructorArgs: ['ImplFractal', 'IF', implOwner.address, implExecutor.address, 518400]
     }
   ) as unknown) as FractalRespect;
 
@@ -127,6 +128,8 @@ export async function deploy() {
     proxyExecutor,
     proxyOther,
     factory,
+    execFactory,
+    otherFactory,
     signers,
     ranksDelay,
     submitRanksEx1, submitRanksEx2

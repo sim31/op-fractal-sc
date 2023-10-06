@@ -44,9 +44,18 @@ contract PeriodicRespect is Respect, UUPSUpgradeable, OwnableUpgradeable {
         return r;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        address issuer_
+    ) {
+        initialize(name_, symbol_, issuer_);
+    }
+
     function initialize(
-        string calldata name_,
-        string calldata symbol_,
+        string memory name_,
+        string memory symbol_,
         address issuer_
     ) public virtual initializer {
         __PeriodicRespect_init(name_, symbol_, issuer_);

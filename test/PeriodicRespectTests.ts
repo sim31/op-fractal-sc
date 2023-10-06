@@ -21,14 +21,16 @@ export async function deployImpl() {
   const factory = await ethers.getContractFactory("PeriodicRespect", implOwner);
 
   const implAddr = await upgrades.deployImplementation(
-    factory, { kind: 'uups' }
+    factory,
+    {
+      kind: 'uups',
+      constructorArgs: ['ImplFractal', 'IF', implOwner.address]
+    },
   );
 
   const addr = implAddr.toString();
   // FIXME: why do I have to do a typecast here?
   const impl = factory.attach(addr) as PeriodicRespect;
-
-  await expect(impl.initialize('ImplFractal', 'IF', implOwner.address)).to.not.be.reverted;
 
   expect(await impl.name()).to.equal('ImplFractal');
 
@@ -42,7 +44,7 @@ export async function deployImpl() {
 }
 
 export async function deploy() {
-  const { signers } = await deployImpl();
+  const { signers, implOwner } = await deployImpl();
 
   const proxyOwner = signers[1]!;
 
@@ -50,7 +52,8 @@ export async function deploy() {
 
   // FIXME: why do I have to do a typecast here?
   const proxy = (await upgrades.deployProxy(
-    factory, ["TestFractal", "TF", proxyOwner.address], { kind: 'uups' }
+    factory, ["TestFractal", "TF", proxyOwner.address],
+    { kind: 'uups', constructorArgs: ['ImplFractal', 'IF', implOwner.address] }
   ) as unknown) as PeriodicRespect;
 
   return { proxy, proxyOwner, factory, signers };
