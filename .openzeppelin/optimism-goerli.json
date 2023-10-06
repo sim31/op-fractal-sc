@@ -1,0 +1,432 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0x04EC7075Fe0fF7A1592fF6084B32C830768db3eF",
+      "txHash": "0x46a15d3fb1f72624197b44347b855413d7a5f906c62dee4e7f1cac544a3d96cc",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "0179652ac7c606e985827aa542a1938a04cf3b7c367b7eb3907596d44c664bcb": {
+      "address": "0xf32BBF9f9AfE45d3E68Ce1056d781Da0586eAF0d",
+      "txHash": "0x0974bcdbf0dfe14d11e54653097e3eafd69d49b21733243537d46892548ff43d",
+      "layout": {
+        "solcVersion": "0.8.19",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:64",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69"
+          },
+          {
+            "label": "_name",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_string_storage",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:25"
+          },
+          {
+            "label": "_symbol",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_string_storage",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:26"
+          },
+          {
+            "label": "_balances",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:28"
+          },
+          {
+            "label": "_values",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_userDefinedValueType(TokenId)3800,t_uint64)",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:29"
+          },
+          {
+            "label": "_tokenByIndex",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_array(t_userDefinedValueType(TokenId)3800)dyn_storage",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:31"
+          },
+          {
+            "label": "_tokenByOwnerIndex",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_address,t_array(t_userDefinedValueType(TokenId)3800)dyn_storage)",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:33"
+          },
+          {
+            "label": "_totalSupply",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint256",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:35"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "58",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "59",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_baseURIVal",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_string_storage",
+            "contract": "PeriodicRespect",
+            "src": "contracts/PeriodicRespect.sol:11"
+          },
+          {
+            "label": "executor",
+            "offset": 0,
+            "slot": "109",
+            "type": "t_address",
+            "contract": "FractalRespect",
+            "src": "contracts/FractalRespect.sol:15"
+          },
+          {
+            "label": "lastRanksTime",
+            "offset": 0,
+            "slot": "110",
+            "type": "t_uint256",
+            "contract": "FractalRespect",
+            "src": "contracts/FractalRespect.sol:16"
+          },
+          {
+            "label": "ranksDelay",
+            "offset": 0,
+            "slot": "111",
+            "type": "t_uint64",
+            "contract": "FractalRespect",
+            "src": "contracts/FractalRespect.sol:17"
+          },
+          {
+            "label": "periodNumber",
+            "offset": 8,
+            "slot": "111",
+            "type": "t_uint64",
+            "contract": "FractalRespect",
+            "src": "contracts/FractalRespect.sol:18"
+          },
+          {
+            "label": "_baseURIVal",
+            "offset": 0,
+            "slot": "112",
+            "type": "t_string_storage",
+            "contract": "FractalRespect",
+            "src": "contracts/FractalRespect.sol:20"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_array(t_userDefinedValueType(TokenId)3800)dyn_storage": {
+            "label": "TokenId[]",
+            "numberOfBytes": "32"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_array(t_userDefinedValueType(TokenId)3800)dyn_storage)": {
+            "label": "mapping(address => TokenId[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_userDefinedValueType(TokenId)3800,t_uint64)": {
+            "label": "mapping(TokenId => uint64)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          },
+          "t_userDefinedValueType(TokenId)3800": {
+            "label": "TokenId",
+            "numberOfBytes": "32",
+            "underlying": "t_uint256"
+          }
+        },
+        "namespaces": {}
+      }
+    },
+    "9fb1656c9262a818fc93664c22ce08639b505085a264e7678e671fb16a292be0": {
+      "address": "0x1E48E51F6534fAc1DCE2f78CE1162af248947AF0",
+      "txHash": "0xd79a1391b0f8cac3cae967950f91eaed021a97d26f3ce0553492e1aed3616b53",
+      "layout": {
+        "solcVersion": "0.8.19",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:64",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69"
+          },
+          {
+            "label": "_name",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_string_storage",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:25"
+          },
+          {
+            "label": "_symbol",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_string_storage",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:26"
+          },
+          {
+            "label": "_balances",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:28"
+          },
+          {
+            "label": "_values",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_userDefinedValueType(TokenId)3800,t_uint64)",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:29"
+          },
+          {
+            "label": "_tokenByIndex",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_array(t_userDefinedValueType(TokenId)3800)dyn_storage",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:31"
+          },
+          {
+            "label": "_tokenByOwnerIndex",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_address,t_array(t_userDefinedValueType(TokenId)3800)dyn_storage)",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:33"
+          },
+          {
+            "label": "_totalSupply",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint256",
+            "contract": "Respect",
+            "src": "contracts/Respect.sol:35"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "58",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "59",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_baseURIVal",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_string_storage",
+            "contract": "PeriodicRespect",
+            "src": "contracts/PeriodicRespect.sol:11"
+          },
+          {
+            "label": "executor",
+            "offset": 0,
+            "slot": "109",
+            "type": "t_address",
+            "contract": "FractalRespect",
+            "src": "contracts/FractalRespect.sol:15"
+          },
+          {
+            "label": "lastRanksTime",
+            "offset": 0,
+            "slot": "110",
+            "type": "t_uint256",
+            "contract": "FractalRespect",
+            "src": "contracts/FractalRespect.sol:16"
+          },
+          {
+            "label": "ranksDelay",
+            "offset": 0,
+            "slot": "111",
+            "type": "t_uint64",
+            "contract": "FractalRespect",
+            "src": "contracts/FractalRespect.sol:17"
+          },
+          {
+            "label": "periodNumber",
+            "offset": 8,
+            "slot": "111",
+            "type": "t_uint64",
+            "contract": "FractalRespect",
+            "src": "contracts/FractalRespect.sol:18"
+          },
+          {
+            "label": "_baseURIVal",
+            "offset": 0,
+            "slot": "112",
+            "type": "t_string_storage",
+            "contract": "FractalRespect",
+            "src": "contracts/FractalRespect.sol:20"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_array(t_userDefinedValueType(TokenId)3800)dyn_storage": {
+            "label": "TokenId[]",
+            "numberOfBytes": "32"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_array(t_userDefinedValueType(TokenId)3800)dyn_storage)": {
+            "label": "mapping(address => TokenId[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_userDefinedValueType(TokenId)3800,t_uint64)": {
+            "label": "mapping(TokenId => uint64)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          },
+          "t_userDefinedValueType(TokenId)3800": {
+            "label": "TokenId",
+            "numberOfBytes": "32",
+            "underlying": "t_uint256"
+          }
+        },
+        "namespaces": {}
+      }
+    }
+  }
+}

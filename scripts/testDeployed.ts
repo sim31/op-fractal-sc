@@ -1,6 +1,11 @@
 import { ethers } from "hardhat";
 import { FractalRespect } from "../typechain-types/contracts";
 
+// FIXME: does not work after updates to deploy
+// npx hardhat node
+// npx hardhat --network localhost run scripts/deploy.ts
+// npx hardhat --network localhost run scripts/testDeployed.ts
+
 const address = '0x71c95911e9a5d330f4d621842ec243ee1343292e'
 
 type GroupRanksStruct = FractalRespect.GroupRanksStruct;
