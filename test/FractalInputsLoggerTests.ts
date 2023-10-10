@@ -26,7 +26,7 @@ describe("FractalInputsLogger", function () {
     });
   });
 
-  describe("submitCons", function () {
+  describe("submitConsEF", function () {
     it("should emit event with submitted args and submitter", async function() {
       const { contract, signers } = await loadFixture(deploy);
 
@@ -40,9 +40,9 @@ describe("FractalInputsLogger", function () {
         delegate,
       };
 
-      const response = contract.submitCons(results, { from: submitter });
+      const response = contract.submitConsEF(results, { from: submitter });
       await expect(response)
-        .to.emit(contract, "ConsensusSubmission");
+        .to.emit(contract, "ConsensusSubmissionEF");
         // FIXME: https://github.com/NomicFoundation/hardhat/issues/3833
         // .withArgs(
         //   submitter,
@@ -66,9 +66,35 @@ describe("FractalInputsLogger", function () {
         delegate,
       };
 
+      const response = contract.submitConsEF(results, { from: submitter });
+      await expect(response)
+        .to.emit(contract, "ConsensusSubmissionEF");
+
+      const receipt = await (await response).wait();
+      console.log(receipt?.logs[0]);
+    });
+  });
+
+  describe("submitCons", function () {
+    it("should emit event with submitted args and submitter", async function() {
+      const { contract, signers } = await loadFixture(deploy);
+
+      const ranks = signers.slice(0, 6).map(s => s.address);
+      const submitter = ranks[0];
+
+      const results = {
+        groupNum: 1,
+        ranks,
+      };
+
       const response = contract.submitCons(results, { from: submitter });
       await expect(response)
         .to.emit(contract, "ConsensusSubmission");
+        // FIXME: https://github.com/NomicFoundation/hardhat/issues/3833
+        // .withArgs(
+        //   submitter,
+        //   [1, ranks, delegate]
+        // );
 
       const receipt = await (await response).wait();
       console.log(receipt?.logs[0]);
