@@ -10,7 +10,9 @@ const config: HardhatUserConfig = {
       url: `https://optimism-goerli.infura.io/v3/${process.env.INFURA_KEY}`,
       accounts: [
         process.env.OPGOERLI_PRIV_KEY!,
-      ]
+      ],
+      gasPrice: 'auto',
+
     },
     goerli: {
       url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
@@ -21,7 +23,7 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      optimistiEthereum: process.env.OPGOERLI_ETHERSCAN_KEY!,
+      optimisticGoerli: process.env.OPGOERLI_ETHERSCAN_KEY!,
       goerli: process.env.GOERLI_ETHERSCAN_KEY!
     }
   }
