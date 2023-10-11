@@ -10,7 +10,11 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
         address[6] ranks;
     }
 
-    // Fibonacci starting from 5 in hex
+    /// Fibonacci starting from 5 in hex
+    /// One byte (two-digit hexadecimal) for each rank
+    /// Level 1 gets 5 Respect
+    /// Level 2 gets 8 Respect
+    /// ...
     bytes constant _rewards = hex"05080D152237";
     address public executor;
     uint public lastRanksTime;
