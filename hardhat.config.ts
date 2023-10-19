@@ -19,12 +19,19 @@ const config: HardhatUserConfig = {
       accounts: [
         process.env.GOERLI_PRIV_KEY!,
       ]
+    },
+    optimism: {
+      url: `https://optimism-mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
+      accounts: [
+        process.env.OP_PRIV_KEY!,
+      ]
     }
   },
   etherscan: {
     apiKey: {
       optimisticGoerli: process.env.OPGOERLI_ETHERSCAN_KEY!,
-      goerli: process.env.GOERLI_ETHERSCAN_KEY!
+      goerli: process.env.GOERLI_ETHERSCAN_KEY!,
+      optimisticEthereum: process.env.OP_ETHERSCAN_KEY!,
     }
   }
 };
