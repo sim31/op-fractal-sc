@@ -14,14 +14,25 @@ contract FractalInputsLogger {
     }
 
 
-    event ConsensusSubmissionEF(address submitter, GroupResultsEF results);
-    event ConsensusSubmission(address submitter, GroupResults results);
+    event ConsensusSubmissionEF(address indexed submitter, bytes32 indexed resultHash);
+    event ConsensusSubmission(address indexed submitter, bytes32 indexed resultHash);
 
     function submitConsEF(GroupResultsEF calldata results) public {
-        emit ConsensusSubmissionEF(msg.sender, results);
+        bytes memory packed = abi.encodePacked(
+            results.groupNum,
+            results.ranks,
+            results.delegate
+        );
+        bytes32 h = keccak256(packed);
+        emit ConsensusSubmissionEF(msg.sender, h);
     } 
 
     function submitCons(GroupResults calldata results) public {
-        emit ConsensusSubmission(msg.sender, results);
+        bytes memory packed = abi.encodePacked(
+            results.groupNum,
+            results.ranks
+        );
+        bytes32 h = keccak256(packed);
+        emit ConsensusSubmission(msg.sender, h);
     }
 }

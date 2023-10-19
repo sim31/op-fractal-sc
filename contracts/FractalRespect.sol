@@ -23,6 +23,11 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
 
     string private _baseURIVal;
 
+    string public intent;
+    string public agreement;
+
+    event AgreementSigned(address indexed signer, string indexed agreement);
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(
         string memory name_,
@@ -88,6 +93,18 @@ contract FractalRespect is PeriodicRespect, FractalInputsLogger {
 
     function setBaseURI(string calldata baseURI) public virtual override byIssuerOrExecutor {
         _baseURIVal = baseURI;
+    }
+
+    function setIntent(string calldata intent_) public virtual onlyOwner {
+        intent = intent_;
+    }
+
+    function setAgreement(string calldata agreement_) public virtual onlyOwner {
+        agreement = agreement_;
+    }
+
+    function signAgreement(string calldata agreement_) public virtual {
+        emit AgreementSigned(_msgSender(), agreement_);
     }
 
     modifier byIssuerOrExecutor() {

@@ -538,4 +538,62 @@ describe("FractalRespect", function () {
       await expect(proxyFromExec.submitRanks(submitRanksEx1)).to.not.be.reverted;
     });
   });
+
+  describe("setIntent", function() {
+    it("should set intent storage variable when called by owner", async function() {
+      const { proxyFromOwner } = await loadFixture(deploy);
+
+      const intentLink = "ipfs://bafybeihkoviema7g3gxyt6la7vd5ho32ictqbilu3wnlo3rs7ewhnp7lly"
+
+      await expect(proxyFromOwner.setIntent(intentLink)).to.not.be.reverted;
+
+      expect(await proxyFromOwner.intent()).to.equal(intentLink);
+    });
+
+    it("should not allow setting intent by accounts other than owner", async function() {
+      const { proxyFromExec, proxyFromOther } = await loadFixture(deploy);
+
+      const intentLink = "ipfs://bafybeihkoviema7g3gxyt6la7vd5ho32ictqbilu3wnlo3rs7ewhnp7lly"
+
+      await expect(proxyFromExec.setIntent(intentLink)).to.be.reverted;
+      await expect(proxyFromOther.setIntent(intentLink)).to.be.reverted;
+    });
+  });
+
+  describe("setAgreement", function() {
+    it("should set agreement storage variable when called by owner", async function() {
+      const { proxyFromOwner } = await loadFixture(deploy);
+
+      const agreementLink = "ipfs://bafybeihkoviema7g3gxyt6la7vd5ho32ictqbilu3wnlo3rs7ewhnp7lly"
+
+      await expect(proxyFromOwner.setAgreement(agreementLink)).to.not.be.reverted;
+
+      expect(await proxyFromOwner.agreement()).to.equal(agreementLink);
+    });
+
+    it("should not allow setting intent by accounts other than owner", async function() {
+      const { proxyFromExec, proxyFromOther } = await loadFixture(deploy);
+
+      const agreementLink = "ipfs://bafybeihkoviema7g3gxyt6la7vd5ho32ictqbilu3wnlo3rs7ewhnp7lly"
+
+      await expect(proxyFromExec.setAgreement(agreementLink)).to.be.reverted;
+      await expect(proxyFromOther.setIntent(agreementLink)).to.be.reverted;
+    });
+  });
+
+  describe("signAgreement", function() {
+    it("should trigger an AgreementSigned event", async function() {
+      const { proxyFromOwner, proxyFromOther, proxyOther } = await loadFixture(deploy);
+
+      const agreementLink = "ipfs://bafybeihkoviema7g3gxyt6la7vd5ho32ictqbilu3wnlo3rs7ewhnp7lly"
+
+      await expect(proxyFromOwner.setAgreement(agreementLink)).to.not.be.reverted;
+
+      expect(await proxyFromOther.agreement()).to.equal(agreementLink);
+
+      await expect(proxyFromOther.signAgreement(agreementLink))
+        .to.emit(proxyFromOther, "AgreementSigned")
+        .withArgs(proxyOther.address, agreementLink);
+    });
+  });
 });

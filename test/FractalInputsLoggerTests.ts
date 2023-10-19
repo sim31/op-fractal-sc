@@ -27,12 +27,12 @@ describe("FractalInputsLogger", function () {
   });
 
   describe("submitConsEF", function () {
-    it("should emit event with submitted args and submitter", async function() {
+    it("should emit event with a hash of submitted arguments and submitter", async function() {
       const { contract, signers } = await loadFixture(deploy);
 
       const delegate = signers[0]!.address;
       const ranks = signers.slice(0, 6).map(s => s.address);
-      const submitter = ranks[0];
+      const submitter = ranks[0]!;
 
       const results = {
         groupNum: 1,
@@ -41,24 +41,23 @@ describe("FractalInputsLogger", function () {
       };
 
       const response = contract.submitConsEF(results, { from: submitter });
-      await expect(response)
-        .to.emit(contract, "ConsensusSubmissionEF");
-        // FIXME: https://github.com/NomicFoundation/hardhat/issues/3833
-        // .withArgs(
-        //   submitter,
-        //   [1, ranks, delegate]
-        // );
 
-      const receipt = await (await response).wait();
-      console.log(receipt?.logs[0]);
+      const resultHash = ethers.solidityPackedKeccak256(
+        [ "uint8", "address[6]", "address" ],
+        [ 1, ranks, delegate ]
+      );
+
+      await expect(response)
+        .to.emit(contract, "ConsensusSubmissionEF")
+        .withArgs(submitter, resultHash);
     });
 
-    it("should emit event with submitted args and submitter, even if delegate is 0", async function() {
+    it("should emit event with a hash of submitted args and submitter, even if delegate is 0", async function() {
       const { contract, signers } = await loadFixture(deploy);
 
       const delegate = ethers.ZeroAddress;
       const ranks = signers.slice(0, 6).map(s => s.address);
-      const submitter = signers[0];
+      const submitter = signers[0]!;
 
       const results = {
         groupNum: 5,
@@ -66,12 +65,15 @@ describe("FractalInputsLogger", function () {
         delegate,
       };
 
+      const resultHash = ethers.solidityPackedKeccak256(
+        [ "uint8", "address[6]", "address" ],
+        [ 5, ranks, delegate ]
+      );
+
       const response = contract.submitConsEF(results, { from: submitter });
       await expect(response)
-        .to.emit(contract, "ConsensusSubmissionEF");
-
-      const receipt = await (await response).wait();
-      console.log(receipt?.logs[0]);
+        .to.emit(contract, "ConsensusSubmissionEF")
+        .withArgs(submitter.address, resultHash)
     });
   });
 
@@ -87,17 +89,16 @@ describe("FractalInputsLogger", function () {
         ranks,
       };
 
-      const response = contract.submitCons(results, { from: submitter });
-      await expect(response)
-        .to.emit(contract, "ConsensusSubmission");
-        // FIXME: https://github.com/NomicFoundation/hardhat/issues/3833
-        // .withArgs(
-        //   submitter,
-        //   [1, ranks, delegate]
-        // );
+      const resultHash = ethers.solidityPackedKeccak256(
+        [ "uint8", "address[6]" ],
+        [ 1, ranks ]
+      );
 
-      const receipt = await (await response).wait();
-      console.log(receipt?.logs[0]);
+      const response = contract.submitCons(results, { from: submitter });
+
+      await expect(response)
+        .to.emit(contract, "ConsensusSubmission")
+        .withArgs(submitter, resultHash);
     });
   });
 });
